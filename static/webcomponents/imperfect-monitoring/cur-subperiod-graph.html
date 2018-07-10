@@ -31,6 +31,10 @@
                 type: Number,
                 computed: '_computeMaxPayoff(payoffMatrix)',
             },
+            _payoffBounds: {
+                type: Array,
+                computed: '_computePayoffBounds(payoffMatrix)',
+            },
         },
         observers: [
             '_updateRealizedPayoffs(realizedPayoffs.splices)',
@@ -53,26 +57,17 @@
             if (!this.graph_obj)
                 return;
 
-            let color, bound_1, bound_2;
-            if (decision === 1) {
-                color = this.aColor;
-                bound_1 = this.get(['payoffMatrix', 0]);
-                bound_2 = this.get(['payoffMatrix', 1]);
-            }
-            else {
-                color = this.bColor;
-                bound_1 = this.get(['payoffMatrix', 2]);
-                bound_2 = this.get(['payoffMatrix', 3]);
-            }
+            // get color and min and max payoffs from _payoffBounds map
+            const payoff_bounds = this.get(['_payoffBounds', decision]);
 
-            this.graph_obj.series[2].options.color = color;
+            this.graph_obj.series[2].options.color = payoff_bounds.color;
             this.graph_obj.series[2].update(this.graph_obj.series[2].options);
-            this.graph_obj.series[3].options.color = color;
-            this.graph_obj.series[3].update(this.graph_obj.series[2].options);
+            this.graph_obj.series[3].options.color = payoff_bounds.color;
+            this.graph_obj.series[3].update(this.graph_obj.series[3].options);
 
             // use -999 and 999 so line always stretches all the way across the graph
-            this.graph_obj.series[2].setData([[-999, bound_1], [999, bound_1]]);
-            this.graph_obj.series[3].setData([[-999, bound_2], [999, bound_2]]);
+            this.graph_obj.series[2].setData([[-999, payoff_bounds.min], [999, payoff_bounds.min]]);
+            this.graph_obj.series[3].setData([[-999, payoff_bounds.max], [999, payoff_bounds.max]]);
         },
         clearGraph() {
             for (let series of this.graph_obj.series) {
@@ -90,6 +85,22 @@
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);
+        },
+        // _payoffBounds is an array that maps decisions to an object
+        // that gives the line color and max/min payoffs for that decision
+        _computePayoffBounds(payoffMatrix) {
+            return [
+                {
+                    color: this.bColor,
+                    min: Math.min(payoffMatrix[2], payoffMatrix[3]),
+                    max: Math.max(payoffMatrix[2], payoffMatrix[3]),
+                },
+                {
+                    color: this.aColor,
+                    min: Math.min(payoffMatrix[0], payoffMatrix[1]),
+                    max: Math.max(payoffMatrix[0], payoffMatrix[1]),
+                }
+            ];
         },
         _initHighchart() {
             this.graph_obj = Highcharts.chart({
@@ -152,13 +163,13 @@
                         data: [],
                     },
                     {
-                        name: "Payoff Bound 1",
+                        name: "Min Payoff",
                         type: "line",
                         lineWidth: 5,
                         data: [],
                     },
                     {
-                        name: "Payoff Bound 2",
+                        name: "Max Payoff",
                         type: "line",
                         lineWidth: 5,
                         data: [],

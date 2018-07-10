@@ -35,6 +35,10 @@
                 type: Number,
                 value: 0,
             },
+            _payoffBounds: {
+                type: Array,
+                computed: '_computePayoffBounds(payoffMatrix)',
+            },
         },
         ready() {
             this.async(this._initHighchart.bind(this), 1);
@@ -76,6 +80,29 @@
             });
             this.graph_obj.xAxis[0].update();
 
+            // add payoff bounds for this subperiod
+
+            // get color and min/max payoffs from _payoffBounds map
+            const payoff_bounds = this.get(['_payoffBounds', fixed_decision]);
+            this.graph_obj.addSeries({
+                type: 'line',
+                color: payoff_bounds.color,
+                lineWidth: 5,
+                data: [
+                    [this._numPayoffs - this.subperiodLength - 1, payoff_bounds.min],
+                    [this._numPayoffs, payoff_bounds.min]
+                ],
+            });
+            this.graph_obj.addSeries({
+                type: 'line',
+                color: payoff_bounds.color,
+                lineWidth: 5,
+                data: [
+                    [this._numPayoffs - this.subperiodLength - 1, payoff_bounds.max],
+                    [this._numPayoffs, payoff_bounds.max]
+                ],
+            });
+
             // if we have enough subperiods to fill the entire screen, add a scrollbar
             if (this._numPayoffs >= this.displayedSubperiods * (this.subperiodLength + 1) - 1) {
                 this.graph_obj.update({
@@ -84,10 +111,10 @@
                 });
             }
 
-            const extremes = this.graph_obj.xAxis[0].getExtremes();
 
             // if graph is scrolled all the way to the left,
             // automatically move the viewport over by one subperiod
+            const extremes = this.graph_obj.xAxis[0].getExtremes();
             if (extremes.max >= this._numPayoffs - realized_payoffs.length) {
                 this.graph_obj.xAxis[0].setExtremes(
                     extremes.min + this.subperiodLength + 1,
@@ -100,6 +127,22 @@
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);
+        },
+        // _payoffBounds is an array that maps decisions to an object
+        // that gives the line color and max/min payoffs for that decision
+        _computePayoffBounds(payoffMatrix) {
+            return [
+                {
+                    color: this.bColor,
+                    min: Math.min(payoffMatrix[2], payoffMatrix[3]),
+                    max: Math.max(payoffMatrix[2], payoffMatrix[3]),
+                },
+                {
+                    color: this.aColor,
+                    min: Math.min(payoffMatrix[0], payoffMatrix[1]),
+                    max: Math.max(payoffMatrix[0], payoffMatrix[1]),
+                }
+            ];
         },
         _initHighchart() {
             this.graph_obj = Highcharts.chart({

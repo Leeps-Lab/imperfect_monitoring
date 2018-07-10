@@ -36,7 +36,9 @@
     <history-graph
         payoff-matrix="[[ _myPayoffs ]]"
         displayed-subperiods="[[ displayedSubperiods ]]"
-        subperiod-length="[[ subperiodLength ]]">
+        subperiod-length="[[ subperiodLength ]]"
+        a-color="[[ aColor ]]"
+        b-color="[[ bColor ]]">
     </history-graph>
 
     <button type="button" on-tap="_newSubperiod">add subperiod</button>
@@ -114,7 +116,8 @@
             this.$$('cur-subperiod-graph').addAverageLine();
         },
         _addPayoffBounds() {
-            this.$$('cur-subperiod-graph').addPayoffBounds(0);
+            const decision = Math.floor(Math.random() * 2);
+            this.$$('cur-subperiod-graph').addPayoffBounds(decision);
         },
         _clearCurSubperiod() {
             this.$$('cur-subperiod-graph').clearGraph();
