@@ -1,0 +1,173 @@
+<link
+    rel="import"
+    href="/static/bower_components/polymer/polymer.html" />
+
+<dom-module id="cur-subperiod-graph">
+
+<template>
+    <div id="chart"></div>
+</template>
+
+<script>
+    let graphthis = null;
+    Polymer({
+        is: 'cur-subperiod-graph',
+        properties: {
+            payoffMatrix: {
+                type: Array,
+            },
+            realizedPayoffs: {
+                type: Array,
+            },
+            subperiodLength: {
+                type: Number,
+            },
+            aColor: {
+                type: String,
+            },
+            bColor: {
+                type: String,
+            },
+            _maxPayoff: {
+                type: Number,
+                computed: '_computeMaxPayoff(payoffMatrix)',
+                observer: '_updateRealizedPayoffs',
+            },
+        },
+        observers: [
+            '_updateRealizedPayoffs(realizedPayoffs.splices)',
+        ],
+        ready() {
+            graphthis = this;
+            this.async(this._initHighchart.bind(this), 1);
+        },
+        _updateRealizedPayoffs() {
+            if (!this.graph_obj)
+                return;
+            
+            let realized_payoffs = this.get('realizedPayoffs').map( e => e.value );
+            // add a null to the end of realized payoffs so highcharts calculates column widths correctly
+            realized_payoffs.push(null);
+            console.log(realized_payoffs);
+            this.graph_obj.series[0].setData(realized_payoffs);
+        },
+        _initHighchart() {
+            this.graph_obj = Highcharts.chart({
+                chart: {
+                    animation: false,
+                    renderTo: this.$.chart,
+                    enabled: false,
+                    width: 150,
+                    height: 400,
+                },
+                title: { 
+                    text: null
+                },
+                exporting: { enabled: false },
+                tooltip: { enabled: false },
+                legend: { enabled: false },
+                credits: { enabled: false },
+                xAxis: {
+                    min: 0,
+                    max: this.subperiodLength - 1,
+                    labels: { enabled: false },
+                    tickLength: 0,
+                },
+                yAxis: {
+                    title: { text: undefined },
+                    min: 0,
+                    max: this._maxPayoff * 1.05,
+                    endOnTick: false,
+                    labels: { enabled: true },
+                },
+                plotOptions: {
+                    column: {
+                        groupPadding: 0,
+                    },
+                    line: {
+                        marker: {
+                            enabled: false
+                            },
+                        linecap: "square"
+                        },
+                    series: {
+                        states: {
+                            hover: {
+                                enabled: false,
+                            }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: "Realized Payoffs",
+                        type: "column",
+                        data: [],
+                    },
+                    {
+                        name: "Average Payoff",
+                        type: "line",
+                        data: [],
+                    },
+                    {
+                        name: "Payoff Bound 1",
+                        type: "line",
+                        lineWidth: 5,
+                        data: [],
+                    },
+                    {
+                        name: "Payoff Bound 2",
+                        type: "line",
+                        lineWidth: 5,
+                        data: [],
+                    },
+                ],
+            });
+        },
+        _computeMaxPayoff(payoffMatrix) {
+            return Math.max.apply(null, payoffMatrix);
+        },
+        addAverageLine() {
+            if (!this.graph_obj)
+                return;
+
+            const realized_payoffs = this.get('realizedPayoffs').map( e => e.value );
+            const avg = realized_payoffs.reduce((a, b) => a + b, 0) / realized_payoffs.length; 
+            
+            // add average line to graph
+            // use -999 and 999 so line stretches all the way across graph
+            this.graph_obj.series[1].setData([[-999, avg], [999, avg]]);
+        },
+        addPayoffBounds(decision) {
+            if (!this.graph_obj)
+                return;
+
+            let color, bound_1, bound_2;
+            if (decision === 1) {
+                color = this.aColor;
+                bound_1 = this.get(['payoffMatrix', 0]);
+                bound_2 = this.get(['payoffMatrix', 1]);
+            }
+            else {
+                color = this.bColor;
+                bound_1 = this.get(['payoffMatrix', 2]);
+                bound_2 = this.get(['payoffMatrix', 3]);
+            }
+
+            this.graph_obj.series[2].options.color = color;
+            this.graph_obj.series[2].update(this.graph_obj.series[2].options);
+            this.graph_obj.series[3].options.color = color;
+            this.graph_obj.series[3].update(this.graph_obj.series[2].options);
+
+            // use -999 and 999 so line always stretches all the way across the graph
+            this.graph_obj.series[2].setData([[-999, bound_1], [999, bound_1]]);
+            this.graph_obj.series[3].setData([[-999, bound_2], [999, bound_2]]);
+        },
+        clearGraph() {
+            for (let series of this.graph_obj.series) {
+                series.setData([]);
+            }
+        }
+    })
+</script>
+</dom-module>

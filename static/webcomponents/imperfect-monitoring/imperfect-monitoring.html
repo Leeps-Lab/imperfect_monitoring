@@ -1,0 +1,114 @@
+<link
+    rel="import"
+    href="/static/bower_components/polymer/polymer.html" />
+<link
+    rel="import"
+    href="/static/otree-redwood/webcomponents/redwood-channel/redwood-channel.html">
+<link
+    rel="import"
+    href="/static/otree-redwood/webcomponents/redwood-decision/redwood-decision.html">
+<link
+    rel="import"
+    href="/static/otree-redwood/webcomponents/redwood-period/redwood-period.html">
+<link
+    rel="import"
+    href="/static/webcomponents/imperfect-monitoring/cur-subperiod-graph.html">
+
+<dom-module id="imperfect-monitoring">
+
+<template>
+    <cur-subperiod-graph
+        payoff-matrix="[[ _myPayoffs ]]"
+        realized-payoffs="[[ _curRealizedPayoffs ]]"
+        subperiod-length="[[ subperiodLength ]]"
+        a-color="[[ aColor ]]"
+        b-color="[[ bColor ]]">
+    </cur-subperiod-graph>
+
+    <button type="button" on-tap="_newInput">add payoff</button>
+    <button type="button" on-tap="_addAverages">add averages</button>
+    <button type="button" on-tap="_addPayoffBounds">add payoff bounds</button>
+    <button type="button" on-tap="_clearCurSubperiod">clear</button>
+</template>
+
+<script>
+    Polymer({
+        is: 'imperfect-monitoring',
+        properties: {
+            payoffMatrix: Array,
+            probabilityMatrix: Array,
+            myDecision: {
+                type: Number,
+            },
+            periodLength: Number,
+            aColor: {
+                type: String,
+                value: '#99C599',
+            },
+            bColor: {
+                type: String,
+                value: '#FFB899',
+            },
+            subperiodLength: {
+                type: Number,
+            },
+            restLength: {
+                type: Number,
+            },
+            displayedSubperiods: {
+                type: Number,
+            },
+            initialDecision: {
+                type: Number,
+            },
+            displayAverageAGraph: {
+                type: Boolean,
+                value: false,
+            },
+            displayAverageBGraph: {
+                type: Boolean,
+                value: false,
+            },
+            displayAverageABGraph: {
+                type: Boolean,
+                value: false,
+            },
+            displayPayoffMatrix: {
+                type: Boolean,
+                value: false,
+            },
+            displayScore: {
+                type: Boolean,
+                value: false,
+            },
+            _curRealizedPayoffs: {
+                type: Array,
+                value: function() { return []; },
+            },
+            _myPayoffs: {
+                type: Array,
+                computed: '_computeMyPayoffs(payoffMatrix)',
+            },
+        },
+        ready() {
+            
+        },
+        _newInput() {
+            this.push('_curRealizedPayoffs', {value: Math.random() * 125});
+        },
+        _computeMyPayoffs(payoffMatrix) {
+            return payoffMatrix.map(e => e[oTree.idInGroup - 1]);
+        },
+        _addAverages() {
+            this.$$('cur-subperiod-graph').addAverageLine();
+        },
+        _addPayoffBounds() {
+            this.$$('cur-subperiod-graph').addPayoffBounds(this.myDecision);
+        },
+        _clearCurSubperiod() {
+            this.$$('cur-subperiod-graph').clearGraph();
+        },
+    });
+</script>
+
+</dom-module>
