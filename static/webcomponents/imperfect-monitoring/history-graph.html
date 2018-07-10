@@ -31,37 +31,72 @@
                 type: Number,
                 computed: '_computeMaxPayoff(payoffMatrix)',
             },
-            _payoffHistory: {
-                type: Array,
-                value: () => [],
+            _numPayoffs: {
+                type: Number,
+                value: 0,
             },
         },
         ready() {
             this.async(this._initHighchart.bind(this), 1);
         },
-        addSubperiod(subperiod_obj) {
-            if (!this.graph_obj)
+        addSubperiod(realized_payoffs, fixed_decision) {
+            if (!this.graph_obj) {
+                console.error('history-graph: graph not initialized');
                 return;
+            }
             
-            let realized_payoffs = subperiod_obj.realized_payoffs.map(e => e.value);
-            const fixed_decision = subperiod_obj.fixed_decision;
+            realized_payoffs = realized_payoffs.map(e => e.value);
 
             if (realized_payoffs.length !== this.subperiodLength)
                 console.error('history-graph: realized payoff array is not the correct length');
 
-            realized_payoffs.push(null);
+            // calculate average payoff for this subperiod
+            const avg = realized_payoffs.reduce((a, b) => a + b, 0) / realized_payoffs.length; 
 
-            this.unshift('_payoffHistory', ...realized_payoffs);
-            const payoff_history = this.get('_payoffHistory');
+            // add a null to put a space between subperiods
+            realized_payoffs.unshift(null);
 
-            this.graph_obj.series[0].setData(payoff_history);
+            realized_payoffs.forEach(payoff => {
+                this.graph_obj.series[0].addPoint(payoff);
+            });
 
-            let plotlines = this.graph_obj.xAxis[0].options.plotLines.push({
+            // keep track of total num of payoffs here because highcharts doesn't let you do that apparently
+            this._numPayoffs += realized_payoffs.length;
+
+            let avg_data = this.graph_obj.series[1].data;
+            avg_data[avg_data.length - 1].remove;
+            this.graph_obj.series[1].addPoint([this._numPayoffs - this.subperiodLength - 1, avg]);
+            this.graph_obj.series[1].addPoint([this._numPayoffs, avg]);
+
+            // add vertical subperiod separators
+            this.graph_obj.xAxis[0].options.plotLines.push({
                 color: 'black',
                 width: 1,
-                value: payoff_history.length - 1,
+                value: this._numPayoffs - this.subperiodLength - 1,
             });
             this.graph_obj.xAxis[0].update();
+
+            // if we have enough subperiods to fill the entire screen, add a scrollbar
+            if (this._numPayoffs >= this.displayedSubperiods * (this.subperiodLength + 1) - 1) {
+                this.graph_obj.update({
+                    chart: { height: 425 },
+                    xAxis: { scrollbar: { enabled: true } },
+                });
+            }
+
+            const extremes = this.graph_obj.xAxis[0].getExtremes();
+
+            // if graph is scrolled all the way to the left,
+            // automatically move the viewport over by one subperiod
+            if (extremes.max >= this._numPayoffs - realized_payoffs.length) {
+                this.graph_obj.xAxis[0].setExtremes(
+                    extremes.min + this.subperiodLength + 1,
+                    extremes.max + this.subperiodLength + 1
+                );
+            }
+
+            // enable animation after the first subperiod is added
+            this.graph_obj.update({ chart: { animation: true} });
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);
@@ -82,11 +117,12 @@
                 legend: { enabled: false },
                 credits: { enabled: false },
                 xAxis: {
-                    min: 0,
-                    // leave width for "displayedSubperiods" subperiods with
-                    // "subperiodLength" payoffs per subperiod, plus an extra space between each subperiod
-                    // the minus one is an alignment thing
-                    max: this.displayedSubperiods * (this.subperiodLength + 1) - 1,
+                    reversed: true,
+                    // leave width for `displayedSubperiods` subperiods with
+                    // `subperiodLength` payoffs per subperiod, plus an extra space between each subperiod
+                    // min and max are backwards because xaxis is reversed
+                    min: -this.displayedSubperiods * (this.subperiodLength + 1) + 1,
+                    max: 0,
                     labels: { enabled: false },
                     tickLength: 0,
                     plotLines: [],
@@ -105,15 +141,16 @@
                     line: {
                         marker: {
                             enabled: false
-                            },
-                        linecap: "square"
                         },
+                        step: 'right',
+                    },
                     series: {
                         states: {
                             hover: {
                                 enabled: false,
                             }
-                        }
+                        },
+                        animationLimit: Infinity,
                     }
                 },
                 series: [
@@ -123,12 +160,11 @@
                         data: [],
                     },
                     {
-                        name: "Subperiod Average Payoff",
+                        name: "Subperiod Average Payoffs",
                         type: "line",
-                        zIndex: 20,
-                        data: [],
+                        data: [ [0, null] ],
                     },
-                ]
+                ],
             });
         },
     })

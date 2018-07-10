@@ -120,12 +120,14 @@
             this.$$('cur-subperiod-graph').clearGraph();
         },
         _newSubperiod() {
-            let subperiod_object = {
-                realized_payoffs: this.get('_curRealizedPayoffs'),
-                fixed_decision: 0,
-            };
+            let realized_payoffs = [];
 
-            this.$$('history-graph').addSubperiod(subperiod_object);
+            for (let i = 0; i < this.subperiodLength; i++) {
+                realized_payoffs.push({value: Math.random() * 125});
+            }
+
+            let decision = Math.floor(Math.random() * 2);
+            this.$$('history-graph').addSubperiod(realized_payoffs, decision);
         },
     });
 </script>
