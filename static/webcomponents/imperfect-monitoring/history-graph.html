@@ -1,0 +1,136 @@
+<link
+    rel="import"
+    href="/static/bower_components/polymer/polymer.html"/>
+
+<dom-module id="history-graph">
+
+<template>
+    <div id="chart"></div>
+</template>
+
+<script>
+    Polymer({
+        is: 'history-graph',
+        properties: {
+            payoffMatrix: {
+                type: Array,
+            },
+            displayedSubperiods: {
+                type: Number,
+            },
+            subperiodLength: {
+                type: Number,
+            },
+            aColor: {
+                type: String,
+            },
+            bColor: {
+                type: String,
+            },
+            _maxPayoff: {
+                type: Number,
+                computed: '_computeMaxPayoff(payoffMatrix)',
+            },
+            _payoffHistory: {
+                type: Array,
+                value: () => [],
+            },
+        },
+        ready() {
+            this.async(this._initHighchart.bind(this), 1);
+        },
+        addSubperiod(subperiod_obj) {
+            if (!this.graph_obj)
+                return;
+            
+            let realized_payoffs = subperiod_obj.realized_payoffs.map(e => e.value);
+            const fixed_decision = subperiod_obj.fixed_decision;
+
+            if (realized_payoffs.length !== this.subperiodLength)
+                console.error('history-graph: realized payoff array is not the correct length');
+
+            realized_payoffs.push(null);
+
+            this.unshift('_payoffHistory', ...realized_payoffs);
+            const payoff_history = this.get('_payoffHistory');
+
+            this.graph_obj.series[0].setData(payoff_history);
+
+            let plotlines = this.graph_obj.xAxis[0].options.plotLines.push({
+                color: 'black',
+                width: 1,
+                value: payoff_history.length - 1,
+            });
+            this.graph_obj.xAxis[0].update();
+        },
+        _computeMaxPayoff(payoffMatrix) {
+            return Math.max.apply(null, payoffMatrix);
+        },
+        _initHighchart() {
+            this.graph_obj = Highcharts.chart({
+                chart: {
+                    animation: false,
+                    renderTo: this.$.chart,
+                    enabled: false,
+                    reflow: false,
+                    width: 600,
+                    height: 400
+                },
+                title: { text: null },
+                exporting: { enabled: false },
+                tooltip: { enabled: false },
+                legend: { enabled: false },
+                credits: { enabled: false },
+                xAxis: {
+                    min: 0,
+                    // leave width for "displayedSubperiods" subperiods with
+                    // "subperiodLength" payoffs per subperiod, plus an extra space between each subperiod
+                    // the minus one is an alignment thing
+                    max: this.displayedSubperiods * (this.subperiodLength + 1) - 1,
+                    labels: { enabled: false },
+                    tickLength: 0,
+                    plotLines: [],
+                },
+                yAxis: {
+                    title: { text: undefined },
+                    min: 0,
+                    max: this._maxPayoff * 1.05,
+                    endOnTick: false,
+                    labels: { enabled: false },
+                },
+                plotOptions: {
+                    column: {
+                        groupPadding: 0,
+                    },
+                    line: {
+                        marker: {
+                            enabled: false
+                            },
+                        linecap: "square"
+                        },
+                    series: {
+                        states: {
+                            hover: {
+                                enabled: false,
+                            }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: "Realized Payoffs",
+                        type: "column",
+                        data: [],
+                    },
+                    {
+                        name: "Subperiod Average Payoff",
+                        type: "line",
+                        zIndex: 20,
+                        data: [],
+                    },
+                ]
+            });
+        },
+    })
+</script>
+</dom-module>

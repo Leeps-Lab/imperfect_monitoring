@@ -13,6 +13,9 @@
 <link
     rel="import"
     href="/static/webcomponents/imperfect-monitoring/cur-subperiod-graph.html">
+<link
+    rel="import"
+    href="/static/webcomponents/imperfect-monitoring/history-graph.html">
 
 <dom-module id="imperfect-monitoring">
 
@@ -29,6 +32,14 @@
     <button type="button" on-tap="_addAverages">add averages</button>
     <button type="button" on-tap="_addPayoffBounds">add payoff bounds</button>
     <button type="button" on-tap="_clearCurSubperiod">clear</button>
+
+    <history-graph
+        payoff-matrix="[[ _myPayoffs ]]"
+        displayed-subperiods="[[ displayedSubperiods ]]"
+        subperiod-length="[[ subperiodLength ]]">
+    </history-graph>
+
+    <button type="button" on-tap="_newSubperiod">add subperiod</button>
 </template>
 
 <script>
@@ -103,10 +114,18 @@
             this.$$('cur-subperiod-graph').addAverageLine();
         },
         _addPayoffBounds() {
-            this.$$('cur-subperiod-graph').addPayoffBounds(this.myDecision);
+            this.$$('cur-subperiod-graph').addPayoffBounds(0);
         },
         _clearCurSubperiod() {
             this.$$('cur-subperiod-graph').clearGraph();
+        },
+        _newSubperiod() {
+            let subperiod_object = {
+                realized_payoffs: this.get('_curRealizedPayoffs'),
+                fixed_decision: 0,
+            };
+
+            this.$$('history-graph').addSubperiod(subperiod_object);
         },
     });
 </script>

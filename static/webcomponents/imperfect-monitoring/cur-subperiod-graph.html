@@ -9,7 +9,6 @@
 </template>
 
 <script>
-    let graphthis = null;
     Polymer({
         is: 'cur-subperiod-graph',
         properties: {
@@ -31,14 +30,12 @@
             _maxPayoff: {
                 type: Number,
                 computed: '_computeMaxPayoff(payoffMatrix)',
-                observer: '_updateRealizedPayoffs',
             },
         },
         observers: [
             '_updateRealizedPayoffs(realizedPayoffs.splices)',
         ],
         ready() {
-            graphthis = this;
             this.async(this._initHighchart.bind(this), 1);
         },
         _updateRealizedPayoffs() {
@@ -48,7 +45,6 @@
             let realized_payoffs = this.get('realizedPayoffs').map( e => e.value );
             // add a null to the end of realized payoffs so highcharts calculates column widths correctly
             realized_payoffs.push(null);
-            console.log(realized_payoffs);
             this.graph_obj.series[0].setData(realized_payoffs);
         },
         _initHighchart() {
@@ -76,6 +72,8 @@
                 yAxis: {
                     title: { text: undefined },
                     min: 0,
+                    // set max to a little more than the max payoff
+                    // so that payoff bounds at top don't get cut off
                     max: this._maxPayoff * 1.05,
                     endOnTick: false,
                     labels: { enabled: true },
