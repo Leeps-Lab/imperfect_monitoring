@@ -67,8 +67,6 @@
             // keep track of total num of payoffs here because highcharts doesn't let you do that apparently
             this._numPayoffs += realized_payoffs.length;
 
-            let avg_data = this.graph_obj.series[1].data;
-            avg_data[avg_data.length - 1].remove;
             this.graph_obj.series[1].addPoint([this._numPayoffs - this.subperiodLength - 1, avg]);
             this.graph_obj.series[1].addPoint([this._numPayoffs, avg]);
 

@@ -15,9 +15,6 @@
             payoffMatrix: {
                 type: Array,
             },
-            realizedPayoffs: {
-                type: Array,
-            },
             subperiodLength: {
                 type: Number,
             },
@@ -26,6 +23,10 @@
             },
             bColor: {
                 type: String,
+            },
+            _payoffs: {
+                type: Array,
+                value: () => [],
             },
             _maxPayoff: {
                 type: Number,
@@ -36,17 +37,23 @@
                 computed: '_computePayoffBounds(payoffMatrix)',
             },
         },
-        observers: [
-            '_updateRealizedPayoffs(realizedPayoffs.splices)',
-        ],
         ready() {
             this.async(this._initHighchart.bind(this), 1);
+        },
+        addPayoff(payoff) {
+            if (!this.graph_obj)
+                return;
+            
+            this.push('_payoffs', payoff);
+
+            // add a null to the end of the payoff array so highcharts calculates column widths correctly
+            this.graph_obj.series[0].setData(this.get('_payoffs').concat([null]));
         },
         addAverageLine() {
             if (!this.graph_obj)
                 return;
 
-            const realized_payoffs = this.get('realizedPayoffs').map( e => e.value );
+            const realized_payoffs = this.get('_payoffs');
             const avg = realized_payoffs.reduce((a, b) => a + b, 0) / realized_payoffs.length; 
             
             // add average line to graph
@@ -73,15 +80,6 @@
             for (let series of this.graph_obj.series) {
                 series.setData([]);
             }
-        },
-        _updateRealizedPayoffs() {
-            if (!this.graph_obj)
-                return;
-            
-            let realized_payoffs = this.get('realizedPayoffs').map( e => e.value );
-            // add a null to the end of realized payoffs so highcharts calculates column widths correctly
-            realized_payoffs.push(null);
-            this.graph_obj.series[0].setData(realized_payoffs);
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);

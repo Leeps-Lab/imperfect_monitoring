@@ -31,7 +31,6 @@
 
     <cur-subperiod-graph
         payoff-matrix="[[ _myPayoffs ]]"
-        realized-payoffs="[[ _curRealizedPayoffs ]]"
         subperiod-length="[[ subperiodLength ]]"
         a-color="[[ aColor ]]"
         b-color="[[ bColor ]]">
@@ -154,7 +153,7 @@
             
         },
         _newInput() {
-            this.push('_curRealizedPayoffs', {value: Math.random() * 125});
+            this.$$('cur-subperiod-graph').addPayoff(Math.random() * 125);
         },
         _computeMyPayoffs(payoffMatrix) {
             return payoffMatrix.map(e => e[oTree.idInGroup - 1]);
