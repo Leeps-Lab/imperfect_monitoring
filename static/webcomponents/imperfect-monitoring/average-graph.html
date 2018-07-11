@@ -1,0 +1,170 @@
+<link
+    rel="import"
+    href="/static/bower_components/polymer/polymer.html" />
+
+<dom-module id="average-graph">
+
+<template>
+    <div id="chart"></div>
+</template>
+
+<script>
+    Polymer({
+        is: 'average-graph',
+        properties: {
+            payoffMatrix: {
+                type: Array,
+            },
+            aPayoffs: {
+                type: Array,
+                value: () => [],
+            },
+            bPayoffs: {
+                type: Array,
+                value: () => [],
+            },
+            showA: {
+                type: Boolean,
+                value: false,
+            },
+            showB: {
+                type: Boolean,
+                value: false,
+            },
+            aColor: {
+                type: String,
+            },
+            bColor: {
+                type: String,
+            },
+            _maxPayoff: {
+                type: Number,
+                computed: '_computeMaxPayoff(payoffMatrix)',
+            },
+        },
+        observers: [
+            '_calcAverage(aPayoffs.splices)',
+            '_calcAverage(bPayoffs.splices)',
+        ],
+        ready() {
+            this.async(this._initHighchart.bind(this), 1);
+        },
+        _calcAverage() {
+            if (!this.graph_obj)
+                return;
+
+            const a_payoffs = this.get('aPayoffs').map(e => e.value);
+            const b_payoffs = this.get('bPayoffs').map(e => e.value);
+            const combined = a_payoffs.concat(b_payoffs);
+
+            const avg = combined.reduce((a, b) => a + b, 0) / combined.length;
+
+            this.graph_obj.series[0].setData([avg, avg]);
+        },
+        _computeMaxPayoff(payoffMatrix) {
+            return Math.max.apply(null, payoffMatrix);
+        },
+        _initHighchart() {
+            let series = [{
+                type: 'line',
+                data: [],
+            }];
+
+            if (this.showA) {
+                series.push({
+                    type: 'line',
+                    color: this.aColor,
+                    lineWidth: 5,
+                    data: [
+                        [0, this.get(['payoffMatrix', 0])],
+                        [1, this.get(['payoffMatrix', 0])],
+                    ],
+                });
+                series.push({
+                    type: 'line',
+                    color: this.aColor,
+                    lineWidth: 5,
+                    data: [
+                        [0, this.get(['payoffMatrix', 1])],
+                        [1, this.get(['payoffMatrix', 1])],
+                    ],
+                });
+            }
+            if (this.showB) {
+                series.push({
+                    type: 'line',
+                    color: this.bColor,
+                    lineWidth: 5,
+                    data: [
+                        [0, this.get(['payoffMatrix', 2])],
+                        [1, this.get(['payoffMatrix', 2])],
+                    ],
+                });
+                series.push({
+                    type: 'line',
+                    color: this.bColor,
+                    lineWidth: 5,
+                    data: [
+                        [0, this.get(['payoffMatrix', 3])],
+                        [1, this.get(['payoffMatrix', 3])],
+                    ],
+                });
+            }
+
+            this.graph_obj = Highcharts.chart({
+                chart: {
+                    animation: false,
+                    renderTo: this.$.chart,
+                    enabled: false,
+                    width: 100,
+                    height: 400,
+                },
+                title: { text: null },
+                exporting: { enabled: false },
+                tooltip: { enabled: false },
+                legend: { enabled: false },
+                credits: { enabled: false },
+                xAxis: {
+                    min: 0,
+                    max: 1,
+                    labels: { enabled: false },
+                    tickLength: 0,
+                },
+                yAxis: {
+                    title: { text: undefined },
+                    min: 0,
+                    max: this._maxPayoff * 1.05,
+                    endOnTick: false,
+                    labels: { enabled: false },
+                },
+                plotOptions: {
+                    line: {
+                        marker: {
+                            enabled: false
+                        },
+                        linecap: "square",
+                        color: 'black',
+                    },
+                    series: {
+                        animation: false,
+                        states: {
+                            hover: {
+                                enabled: false,
+                            }
+                        }
+                    }
+                },
+                line: {
+                    marker: {
+                        enabled: false,
+                        states: {
+                            hover: { enabled: false },
+                            select: { enabled: false }
+                        }
+                    }
+                },
+                series: series,
+            });
+        },
+    });
+</script>

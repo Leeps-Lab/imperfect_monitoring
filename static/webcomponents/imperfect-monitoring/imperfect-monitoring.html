@@ -16,10 +16,19 @@
 <link
     rel="import"
     href="/static/webcomponents/imperfect-monitoring/history-graph.html">
+<link
+    rel="import"
+    href="/static/webcomponents/imperfect-monitoring/average-graph.html">
 
 <dom-module id="imperfect-monitoring">
 
 <template>
+    <style>
+        .container * {
+            display: inline-block;
+        }
+    </style>
+
     <cur-subperiod-graph
         payoff-matrix="[[ _myPayoffs ]]"
         realized-payoffs="[[ _curRealizedPayoffs ]]"
@@ -42,6 +51,36 @@
     </history-graph>
 
     <button type="button" on-tap="_newSubperiod">add subperiod</button>
+
+    <div class="container">
+        <average-graph
+            payoff-matrix="[[ _myPayoffs ]]"
+            a-color="[[ aColor ]]"
+            b-color="[[ bColor ]]"
+            a-payoffs="[[ _aPayoffs ]]"
+            b-payoffs="[[ _bPayoffs ]]"
+            show-a
+            show-b>
+        </average-graph>
+        <average-graph
+            payoff-matrix="[[ _myPayoffs ]]"
+            a-color="[[ aColor ]]"
+            b-color="[[ bColor ]]"
+            a-payoffs="[[ _aPayoffs ]]"
+            show-a>
+        </average-graph>
+        <average-graph
+            payoff-matrix="[[ _myPayoffs ]]"
+            a-color="[[ aColor ]]"
+            b-color="[[ bColor ]]"
+            b-payoffs="[[ _bPayoffs ]]"
+            show-b>
+        </average-graph>
+    </div>
+
+    <button type="button" on-tap="_addAPayoff">add A payoff</button>
+    <button type="button" on-tap="_addBPayoff">add B payoff</button>
+
 </template>
 
 <script>
@@ -102,6 +141,14 @@
                 type: Array,
                 computed: '_computeMyPayoffs(payoffMatrix)',
             },
+            _aPayoffs: {
+                type: Array,
+                value: () => [],
+            },
+            _bPayoffs: {
+                type: Array,
+                value: () => [],
+            },
         },
         ready() {
             
@@ -131,6 +178,12 @@
 
             let decision = Math.floor(Math.random() * 2);
             this.$$('history-graph').addSubperiod(realized_payoffs, decision);
+        },
+        _addAPayoff() {
+            this.push('_aPayoffs', {value: Math.random() * 125});
+        },
+        _addBPayoff() {
+            this.push('_bPayoffs', {value: Math.random() * 125});
         },
     });
 </script>
