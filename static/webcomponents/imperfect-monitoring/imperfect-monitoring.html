@@ -24,61 +24,162 @@
 
 <template>
     <style>
-        .container * {
-            display: inline-block;
+        #score-and-tables {
+            margin-bottom: 15px;
+        }
+
+        #score_and_tables > table {
+            width: auto;
+            margin: auto;
+        }
+
+        #graphs {
+            display: flex;
+            flex-direction: row;
+            height: 465px;
+            margin-bottom: 15px;
+        }
+
+        #graphs > div {
+            border: 1px solid black;
+            margin: 5px;
+            padding: 2px;
+            text-align: center;
+        }
+
+        #graphs > div > span {
+            padding-top: 2px;
+        }
+
+        #buttons {
+            text-align: center;
+        }
+
+        #buttons > button {
+            box-shadow: none;
+        }
+
+        button.border-not-selected {
+            border: none;
+        }
+
+        button.border-a-selected {
+            border: thick solid #4f9b4f;
+        }
+
+        button.border-b-selected {
+            border: thick solid #fc9755;
+        }
+
+        button.background-not-selected {
+            background-color: #dbdbdb;
+        }
+
+        button.background-a-selected {
+            background-color: [[ aColor ]];
+        }
+
+        button.background-b-selected {
+            background-color: [[ bColor ]];
         }
     </style>
 
-    <cur-subperiod-graph
-        payoff-matrix="[[ _myPayoffs ]]"
-        subperiod-length="[[ subperiodLength ]]"
-        a-color="[[ aColor ]]"
-        b-color="[[ bColor ]]">
-    </cur-subperiod-graph>
+    <div id="score-and-tables">
+        <table class="table table-bordered text-center" hidden$="[[ !displayPayoffMatrix ]]">
+            <tr>
+                <th></th>
+                <th>If other player:</th>
+                <th style$="background-color: [[ aColor ]];">Contribute</th>
+                <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
+            </tr>
+            <tr>
+                <th rowspan="2">If you:</th> 
+                <th style$="background-color: [[ aColor ]];">Contribute</th>
+                <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 0) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
+                <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 1) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
+            </tr>
+            <tr>
+                <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
+                <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 2) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
+                <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 3) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
+            </tr>
+        </table>
 
-    <button type="button" on-tap="_newInput">add payoff</button>
-    <button type="button" on-tap="_addAverages">add averages</button>
-    <button type="button" on-tap="_addPayoffBounds">add payoff bounds</button>
-    <button type="button" on-tap="_clearCurSubperiod">clear</button>
-
-    <history-graph
-        payoff-matrix="[[ _myPayoffs ]]"
-        displayed-subperiods="[[ displayedSubperiods ]]"
-        subperiod-length="[[ subperiodLength ]]"
-        a-color="[[ aColor ]]"
-        b-color="[[ bColor ]]">
-    </history-graph>
-
-    <button type="button" on-tap="_newSubperiod">add subperiod</button>
-
-    <div class="container">
-        <average-graph
-            payoff-matrix="[[ _myPayoffs ]]"
-            a-color="[[ aColor ]]"
-            b-color="[[ bColor ]]"
-            a-payoffs="[[ _aPayoffs ]]"
-            b-payoffs="[[ _bPayoffs ]]"
-            show-a
-            show-b>
-        </average-graph>
-        <average-graph
-            payoff-matrix="[[ _myPayoffs ]]"
-            a-color="[[ aColor ]]"
-            b-color="[[ bColor ]]"
-            a-payoffs="[[ _aPayoffs ]]"
-            show-a>
-        </average-graph>
-        <average-graph
-            payoff-matrix="[[ _myPayoffs ]]"
-            a-color="[[ aColor ]]"
-            b-color="[[ bColor ]]"
-            b-payoffs="[[ _bPayoffs ]]"
-            show-b>
-        </average-graph>
+        <span hidden$="[[ !displayScore ]]">
+            Points so far: [[ _toFixed(totalPoints) ]]
+        </span>
     </div>
 
-    <button type="button" on-tap="_addAPayoff">add A payoff</button>
-    <button type="button" on-tap="_addBPayoff">add B payoff</button>
+    <div id="graphs">
+        <div >
+            <span>Current Subperiod</span>
+            <cur-subperiod-graph
+                payoff-matrix="[[ _myPayoffs ]]"
+                subperiod-length="[[ subperiodLength ]]"
+                a-color="[[ aColor ]]"
+                b-color="[[ bColor ]]">
+            </cur-subperiod-graph>
+        </div>
+        <div>
+            <span>History</span>
+            <history-graph
+                payoff-matrix="[[ _myPayoffs ]]"
+                displayed-subperiods="[[ displayedSubperiods ]]"
+                subperiod-length="[[ subperiodLength ]]"
+                a-color="[[ aColor ]]"
+                b-color="[[ bColor ]]">
+            </history-graph>
+        </div>
+        <div hidden$="[[ !displayAverageAGraph ]]">
+            <span>Average A</span>
+            <average-graph
+                payoff-matrix="[[ _myPayoffs ]]"
+                a-color="[[ aColor ]]"
+                b-color="[[ bColor ]]"
+                a-payoffs="[[ _aPayoffs ]]"
+                show-a>
+            </average-graph>
+        </div>
+        <div hidden$="[[ !displayAverageBGraph ]]">
+            <span>Average B</span>
+            <average-graph
+                payoff-matrix="[[ _myPayoffs ]]"
+                a-color="[[ aColor ]]"
+                b-color="[[ bColor ]]"
+                b-payoffs="[[ _bPayoffs ]]"
+                show-b>
+            </average-graph>
+        </div>
+        <div hidden$="[[ !displayAverageABGraph ]]">
+            <span>Average AB</span>
+            <average-graph
+                payoff-matrix="[[ _myPayoffs ]]"
+                a-color="[[ aColor ]]"
+                b-color="[[ bColor ]]"
+                a-payoffs="[[ _aPayoffs ]]"
+                b-payoffs="[[ _bPayoffs ]]"
+                show-a
+                show-b>
+            </average-graph>
+        </div>
+    </div>
+    
+    <div id="buttons">
+        <button
+            type="button"
+            value=0
+            on-tap="_setMyDecision"
+            class$="btn [[ _buttonBorder(0, myDecision) ]]">
+            Don't Contribute
+        </button>
+        <button
+            type="button"
+            value=1
+            on-tap="_setMyDecision"
+            class$="btn [[ _buttonBorder(1, myDecision) ]] [[ _buttonBackground(1, ) ]]">
+            Contribute
+        </button>
+    </div>
 
 </template>
 
@@ -132,13 +233,16 @@
                 type: Boolean,
                 value: false,
             },
-            _curRealizedPayoffs: {
-                type: Array,
-                value: function() { return []; },
+            _fixedDecision: {
+
             },
             _myPayoffs: {
                 type: Array,
                 computed: '_computeMyPayoffs(payoffMatrix)',
+            },
+            _mySignals: {
+                type: Array,
+                computed: '_computeMySignals(probabilityMatrix)',
             },
             _aPayoffs: {
                 type: Array,
@@ -150,39 +254,44 @@
             },
         },
         ready() {
-            
+            this.myDecision = this.initialDecision;
         },
-        _newInput() {
-            this.$$('cur-subperiod-graph').addPayoff(Math.random() * 125);
+        _setMyDecision(e) {
+            this.myDecision = parseInt(e.target.value);
         },
         _computeMyPayoffs(payoffMatrix) {
-            return payoffMatrix.map(e => e[oTree.idInGroup - 1]);
+            return payoffMatrix.map(e => parseInt(e[oTree.idInGroup - 1]));
         },
-        _addAverages() {
-            this.$$('cur-subperiod-graph').addAverageLine();
+        _computeMySignals(probabilityMatrix) {
+            return probabilityMatrix.map(e => parseFloat(e[oTree.idInGroup - 1]));
         },
-        _addPayoffBounds() {
-            const decision = Math.floor(Math.random() * 2);
-            this.$$('cur-subperiod-graph').addPayoffBounds(decision);
+        _array(a, i) {
+            return a[i];
         },
-        _clearCurSubperiod() {
-            this.$$('cur-subperiod-graph').clearGraph();
+        _arrayPercent(a, i) {
+            return (a[i] * 100) + '%';
         },
-        _newSubperiod() {
-            let realized_payoffs = [];
+        _toFixed(num) {
+            // turn number into two-point decimal
+            let numString = num.toFixed(2);
+            // if number ends with a 0, remove the zero
+            if (numString.endsWith('0'))
+                numString = numString.slice(0, -1);
+            // if number still ends with a 0, remove the other zero and the dot
+            if (numString.endsWith('0'))
+                numString = numString.slice(0, -2);
+            return numString;
+        },
+        _buttonBackground(value, myFixedDecision) {
 
-            for (let i = 0; i < this.subperiodLength; i++) {
-                realized_payoffs.push({value: Math.random() * 125});
-            }
-
-            let decision = Math.floor(Math.random() * 2);
-            this.$$('history-graph').addSubperiod(realized_payoffs, decision);
         },
-        _addAPayoff() {
-            this.push('_aPayoffs', {value: Math.random() * 125});
-        },
-        _addBPayoff() {
-            this.push('_bPayoffs', {value: Math.random() * 125});
+        _buttonBorder(value, myDecision) {
+            if (value !== myDecision)
+                return 'border-not-selected';
+            if (value === 0)
+                return 'border-a-selected';
+            if (value === 1)
+                return 'border-b-selected';
         },
     });
 </script>
