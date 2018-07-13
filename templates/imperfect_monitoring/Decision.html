@@ -37,7 +37,7 @@
         displayed-subperiods='{{ player.group.displayed_subperiods }}'
         initial-decision='{{ player.initial_decision }}'
         num-sub='{{ player.group.number_subperiods }}'
-        player-payoff='{{ player.payoff }}'
+        total-points='{{ player.participant.payoff | floatformat:0 }}'
         seconds-per-tick='{{ player.group.seconds_per_tick }}'
         {% if player.group.display_average_a_graph %}
             display-average-a-graph

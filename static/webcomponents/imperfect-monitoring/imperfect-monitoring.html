@@ -25,6 +25,12 @@
 <template>
     <style>
 
+        :host {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         #table {
             width: auto;
             margin: auto;
@@ -32,11 +38,11 @@
         }
 
         #score {
-            margin: auto;
             margin-bottom: 15px;
         }
 
         #graphs {
+            flex-shrink: 0;
             display: flex;
             flex-direction: row;
             height: 470px;
@@ -107,7 +113,7 @@
     </table>
 
     <div id="score" hidden$="[[ !displayScore ]]">
-        Points so far: [[ _toFixed(totalPoints) ]]
+        Points so far: [[ totalPoints ]]
     </div>
 
     <div id="graphs">
@@ -171,7 +177,7 @@
             on-tap="_setMyDecision"
             class$="btn [[ _buttonBorder(0, _myDecision) ]]"
             style$="background-color: [[ _buttonBackground(0, _fixedDecision) ]]"
-            disabled$="_isPeriodRunning">
+            disabled$="[[ !_isPeriodRunning ]]">
             Don't Contribute
         </button>
         <button
@@ -180,7 +186,7 @@
             on-tap="_setMyDecision"
             class$="btn [[ _buttonBorder(1, _myDecision) ]]"
             style$="background-color: [[ _buttonBackground(1, _fixedDecision) ]]"
-            disabled$="_isPeriodRunning">
+            disabled$="[[ !_isPeriodRunning ]]">
             Contribute
         </button>
     </div>
@@ -218,6 +224,9 @@
                 type: Number,
             },
             secondsPerTick: {
+                type: Number,
+            },
+            totalPoints: {
                 type: Number,
             },
             displayAverageAGraph: {
@@ -268,6 +277,9 @@
                 type: Array,
                 value: () => [],
             },
+            _isPeriodRunning: {
+                type: Boolean,
+            },
         },
         ready() {
             this._myDecision = this.initialDecision;
@@ -303,6 +315,11 @@
                 this.push('_bPayoffs', {value: payoffs[tick_num]});
             else
                 this.push('_aPayoffs', {value: payoffs[tick_num]});
+            
+            this.totalPoints += payoffs[tick_num];
+
+            if (tick_num === payoffs.length - 1)
+                this.cur_subperiod_graph.addAverageLine();
 
             const interval = this.secondsPerTick * 1000;
             this.timeout_id = window.setTimeout(
@@ -325,17 +342,6 @@
         },
         _arrayPercent(a, i) {
             return (a[i] * 100) + '%';
-        },
-        _toFixed(num) {
-            // turn number into two-point decimal
-            let numString = num.toFixed(2);
-            // if number ends with a 0, remove the zero
-            if (numString.endsWith('0'))
-                numString = numString.slice(0, -1);
-            // if number still ends with a 0, remove the other zero and the dot
-            if (numString.endsWith('0'))
-                numString = numString.slice(0, -2);
-            return numString;
         },
         _buttonBackground(value, fixedDecision) {
             if (value !== fixedDecision)

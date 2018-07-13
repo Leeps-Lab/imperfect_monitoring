@@ -159,16 +159,21 @@ class Group(DecisionGroup):
                 else:
                     realized_payoffs.append(payoffs[2])
                 self.add_subperiod_result(pcode, 'G', subperiod_num)
+        
+        player.payoff += sum(realized_payoffs)
+        player.save()
 
         return realized_payoffs
     
     def add_subperiod_result(self, pcode, result, subperiod_num):
-        key = str(subperiod_num)
-        if key not in self.subperiod_results:
-            self.subperiod_results[key] = {}
-        if pcode not in self.subperiod_results[key]:
-             self.subperiod_results[key][pcode] = ''
-        self.subperiod_results[key][pcode] += result
+        subperiod_key = str(subperiod_num)
+
+        if subperiod_key not in self.subperiod_results:
+            self.subperiod_results[subperiod_key] = {}
+        if pcode not in self.subperiod_results[subperiod_key]:
+            self.subperiod_results[subperiod_key][pcode] = ''
+
+        self.subperiod_results[subperiod_key][pcode] += result
         self.save(update_fields=['subperiod_results'])
     
 
@@ -183,7 +188,7 @@ class Player(BasePlayer):
         if not self.decisions_by_round:
             self.decisions_by_round = {}
         
-        key = str(self.subsession.round_number)
+        key = str(self.round_number)
 
         if key in self.decisions_by_round:
             return self.decisions_by_round[key]

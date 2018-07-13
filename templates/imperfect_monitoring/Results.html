@@ -2,12 +2,21 @@
 {% load staticfiles otree %}
 
 {% block title %}
-    Page title
+    Results
 {% endblock %}
 
 {% block content %}
+    <div>
+        This round you made {{ player.payoff }}
+    </div>
 
-    {% next_button %}
+    <div>
+        Total you have {{ player.participant.payoff }}
+    </div>
+
+    <div>
+        {% next_button %}
+    </div>
 {% endblock %}
 
 

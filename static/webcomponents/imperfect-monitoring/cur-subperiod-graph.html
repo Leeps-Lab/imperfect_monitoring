@@ -126,8 +126,7 @@
                 yAxis: {
                     title: { text: undefined },
                     min: 0,
-                    // set max to a little more than the max payoff
-                    // so that payoff bounds at top don't get cut off
+                    // add 5% to max so bars at the top don't get cut off
                     max: this._maxPayoff * 1.05,
                     endOnTick: false,
                     labels: { enabled: true },
