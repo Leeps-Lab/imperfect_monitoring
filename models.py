@@ -3,7 +3,7 @@ from otree.api import (
     Currency as c, currency_range
 )
 from otree_redwood.models import DecisionGroup
-from .utils import DiscreteEventEmitter
+from otree_redwood.utils import DiscreteEventEmitter
 import csv, random, math
 from jsonfield import JSONField
 
@@ -110,21 +110,22 @@ class Group(DecisionGroup):
             (self.seconds_per_tick() * self.subperiod_length()) + self.rest_length_seconds(),
             self.period_length(),
             self,
-            self.subperiod_start)
+            self.subperiod_start,
+            True)
         emitter.start()
 
     def subperiod_start(self, current_interval, intervals):
         self.refresh_from_db()
-        print(current_interval, '/', intervals)
         msg = {}
         num_signals = min(self.num_signals() - current_interval * self.subperiod_length(), self.subperiod_length())
 
         for player in self.get_players():
             pcode = player.participant.code
 
-            msg[pcode] = {}
-            msg[pcode]['fixed_decision'] = self.group_decisions[pcode]
-            msg[pcode]['payoffs'] = self.calc_payoffs(player, num_signals, current_interval)
+            msg[pcode] = {
+                'fixed_decision': self.group_decisions[pcode],
+                'payoffs': self.calc_payoffs(player, num_signals, current_interval),
+            }
         
         self.send('subperiod-start', msg)
     
@@ -158,6 +159,7 @@ class Group(DecisionGroup):
                 else:
                     realized_payoffs.append(payoffs[2])
                 self.add_subperiod_result(pcode, 'G', subperiod_num)
+
         return realized_payoffs
     
     def add_subperiod_result(self, pcode, result, subperiod_num):

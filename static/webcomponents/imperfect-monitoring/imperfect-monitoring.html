@@ -96,13 +96,13 @@
         <tr>
             <th rowspan="2">If you:</th> 
             <th style$="background-color: [[ aColor ]];">Contribute</th>
-            <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 0) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
-            <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 1) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
+            <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 0) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
+            <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 1) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
         </tr>
         <tr>
             <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
-            <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 2) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
-            <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 3) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
+            <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 2) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
+            <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 3) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
         </tr>
     </table>
 
@@ -253,9 +253,12 @@
                 type: Array,
                 computed: '_computeMyPayoffs(payoffMatrix)',
             },
-            _mySignals: {
+            _myProbabilities: {
                 type: Array,
-                computed: '_computeMySignals(probabilityMatrix)',
+                computed: '_computeMyProbabilities(probabilityMatrix)',
+            },
+            _curSubperiodPayoffs: {
+                type: Array,
             },
             _aPayoffs: {
                 type: Array,
@@ -270,17 +273,43 @@
             this._myDecision = this.initialDecision;
             this._fixedDecision = this.initialDecision;
 
-            this.cur_subperiod_graph = this.$$('cur_subperiod_graph');
+            this.cur_subperiod_graph = this.$$('cur-subperiod-graph');
             this.history_graph = this.$$('history-graph');
         },
         _onSubperiodStart(e) {
+            if (this._curSubperiodPayoffs) {
+                this.history_graph.addSubperiod(this._curSubperiodPayoffs, this._fixedDecision);
+            }
+
             let msg = e.detail.payload[oTree.participantCode];
 
             this._fixedDecision = msg.fixed_decision;
+            this.set('_curSubperiodPayoffs', msg.payoffs);
 
-            this.history_graph.addSubperiod(msg.payoffs, msg.fixed_decision);
+            window.clearTimeout(this.timeout_id);
+            this.cur_subperiod_graph.clearGraph();
+            this.cur_subperiod_graph.addPayoffBounds(this._fixedDecision);
+            this.start_time = performance.now();
+            this._tick(0);
+        },
+        _tick(tick_num) {
+            const payoffs = this.get('_curSubperiodPayoffs');
+            if (tick_num >= payoffs.length)
+                return;
 
-            console.log(msg.fixed_decision, msg.payoffs);
+            this.cur_subperiod_graph.addPayoff(payoffs[tick_num]);
+
+            if (this._fixedDecision == 0)
+                this.push('_bPayoffs', {value: payoffs[tick_num]});
+            else
+                this.push('_aPayoffs', {value: payoffs[tick_num]});
+
+            const interval = this.secondsPerTick * 1000;
+            this.timeout_id = window.setTimeout(
+                this._tick.bind(this),
+                interval - ((performance.now() - this.start_time) % interval),
+                tick_num + 1
+            );
         },
         _setMyDecision(e) {
             this._myDecision = parseInt(e.target.value);
@@ -288,7 +317,7 @@
         _computeMyPayoffs(payoffMatrix) {
             return payoffMatrix.map(e => parseInt(e[oTree.idInGroup - 1]));
         },
-        _computeMySignals(probabilityMatrix) {
+        _computeMyProbabilities(probabilityMatrix) {
             return probabilityMatrix.map(e => parseFloat(e[oTree.idInGroup - 1]));
         },
         _array(a, i) {
@@ -311,17 +340,17 @@
         _buttonBackground(value, fixedDecision) {
             if (value !== fixedDecision)
                 return '#dbdbdb';
-            if (value === 0)
-                return this.aColor;
             if (value === 1)
+                return this.aColor;
+            if (value === 0)
                 return this.bColor;
         },
         _buttonBorder(value, myDecision) {
             if (value !== myDecision)
                 return 'border-not-selected';
-            if (value === 0)
-                return 'border-a-selected';
             if (value === 1)
+                return 'border-a-selected';
+            if (value === 0)
                 return 'border-b-selected';
         },
     });
