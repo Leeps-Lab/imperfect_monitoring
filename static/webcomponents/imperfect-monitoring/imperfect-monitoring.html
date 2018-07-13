@@ -24,19 +24,22 @@
 
 <template>
     <style>
-        #score-and-tables {
+
+        #table {
+            width: auto;
+            margin: auto;
             margin-bottom: 15px;
         }
 
-        #score_and_tables > table {
-            width: auto;
+        #score {
             margin: auto;
+            margin-bottom: 15px;
         }
 
         #graphs {
             display: flex;
             flex-direction: row;
-            height: 465px;
+            height: 470px;
             margin-bottom: 15px;
         }
 
@@ -48,7 +51,7 @@
         }
 
         #graphs > div > span {
-            padding-top: 2px;
+            padding-top: 5px;
         }
 
         #buttons {
@@ -70,44 +73,41 @@
         button.border-b-selected {
             border: thick solid #fc9755;
         }
-
-        button.background-not-selected {
-            background-color: #dbdbdb;
-        }
-
-        button.background-a-selected {
-            background-color: [[ aColor ]];
-        }
-
-        button.background-b-selected {
-            background-color: [[ bColor ]];
-        }
     </style>
 
-    <div id="score-and-tables">
-        <table class="table table-bordered text-center" hidden$="[[ !displayPayoffMatrix ]]">
-            <tr>
-                <th></th>
-                <th>If other player:</th>
-                <th style$="background-color: [[ aColor ]];">Contribute</th>
-                <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
-            </tr>
-            <tr>
-                <th rowspan="2">If you:</th> 
-                <th style$="background-color: [[ aColor ]];">Contribute</th>
-                <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 0) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
-                <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 1) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
-            </tr>
-            <tr>
-                <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
-                <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 2) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
-                <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 3) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
-            </tr>
-        </table>
+    <redwood-period
+        running="{{ _isPeriodRunning }}">
+    </redwood-period>
+    <redwood-decision
+        my-decision="{{ _myDecision }}">
+    </redwood-decision>
+    <redwood-channel
+        channel="subperiod-start"
+        on-event="_onSubperiodStart">
+    </redwood-channel>
 
-        <span hidden$="[[ !displayScore ]]">
-            Points so far: [[ _toFixed(totalPoints) ]]
-        </span>
+    <table id="table" class="table table-bordered text-center" hidden$="[[ !displayPayoffMatrix ]]">
+        <tr>
+            <th></th>
+            <th>If other player:</th>
+            <th style$="background-color: [[ aColor ]];">Contribute</th>
+            <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
+        </tr>
+        <tr>
+            <th rowspan="2">If you:</th> 
+            <th style$="background-color: [[ aColor ]];">Contribute</th>
+            <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 0) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
+            <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_mySignals, 1) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
+        </tr>
+        <tr>
+            <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
+            <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 2) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
+            <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_mySignals, 3) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
+        </tr>
+    </table>
+
+    <div id="score" hidden$="[[ !displayScore ]]">
+        Points so far: [[ _toFixed(totalPoints) ]]
     </div>
 
     <div id="graphs">
@@ -169,14 +169,18 @@
             type="button"
             value=0
             on-tap="_setMyDecision"
-            class$="btn [[ _buttonBorder(0, myDecision) ]]">
+            class$="btn [[ _buttonBorder(0, _myDecision) ]]"
+            style$="background-color: [[ _buttonBackground(0, _fixedDecision) ]]"
+            disabled$="_isPeriodRunning">
             Don't Contribute
         </button>
         <button
             type="button"
             value=1
             on-tap="_setMyDecision"
-            class$="btn [[ _buttonBorder(1, myDecision) ]] [[ _buttonBackground(1, ) ]]">
+            class$="btn [[ _buttonBorder(1, _myDecision) ]]"
+            style$="background-color: [[ _buttonBackground(1, _fixedDecision) ]]"
+            disabled$="_isPeriodRunning">
             Contribute
         </button>
     </div>
@@ -187,12 +191,15 @@
     Polymer({
         is: 'imperfect-monitoring',
         properties: {
-            payoffMatrix: Array,
-            probabilityMatrix: Array,
-            myDecision: {
+            payoffMatrix: {
+                type: Array,
+            },
+            probabilityMatrix: {
+                type: Array,
+            },
+            periodLength: {
                 type: Number,
             },
-            periodLength: Number,
             aColor: {
                 type: String,
                 value: '#99C599',
@@ -204,13 +211,13 @@
             subperiodLength: {
                 type: Number,
             },
-            restLength: {
-                type: Number,
-            },
             displayedSubperiods: {
                 type: Number,
             },
             initialDecision: {
+                type: Number,
+            },
+            secondsPerTick: {
                 type: Number,
             },
             displayAverageAGraph: {
@@ -233,8 +240,14 @@
                 type: Boolean,
                 value: false,
             },
+            _myDecision: {
+                type: Number,
+            },
+            _isPeriodRunning: {
+                type: Boolean,
+            },
             _fixedDecision: {
-
+                type: Number,
             },
             _myPayoffs: {
                 type: Array,
@@ -254,10 +267,23 @@
             },
         },
         ready() {
-            this.myDecision = this.initialDecision;
+            this._myDecision = this.initialDecision;
+            this._fixedDecision = this.initialDecision;
+
+            this.cur_subperiod_graph = this.$$('cur_subperiod_graph');
+            this.history_graph = this.$$('history-graph');
+        },
+        _onSubperiodStart(e) {
+            let msg = e.detail.payload[oTree.participantCode];
+
+            this._fixedDecision = msg.fixed_decision;
+
+            this.history_graph.addSubperiod(msg.payoffs, msg.fixed_decision);
+
+            console.log(msg.fixed_decision, msg.payoffs);
         },
         _setMyDecision(e) {
-            this.myDecision = parseInt(e.target.value);
+            this._myDecision = parseInt(e.target.value);
         },
         _computeMyPayoffs(payoffMatrix) {
             return payoffMatrix.map(e => parseInt(e[oTree.idInGroup - 1]));
@@ -282,8 +308,13 @@
                 numString = numString.slice(0, -2);
             return numString;
         },
-        _buttonBackground(value, myFixedDecision) {
-
+        _buttonBackground(value, fixedDecision) {
+            if (value !== fixedDecision)
+                return '#dbdbdb';
+            if (value === 0)
+                return this.aColor;
+            if (value === 1)
+                return this.bColor;
         },
         _buttonBorder(value, myDecision) {
             if (value !== myDecision)
