@@ -283,7 +283,6 @@
         },
         ready() {
             this._myDecision = this.initialDecision;
-            this._fixedDecision = this.initialDecision;
 
             this.cur_subperiod_graph = this.$$('cur-subperiod-graph');
             this.history_graph = this.$$('history-graph');
@@ -318,8 +317,9 @@
             
             this.totalPoints += payoffs[tick_num];
 
-            if (tick_num === payoffs.length - 1)
+            if (tick_num === payoffs.length - 1) {
                 this.cur_subperiod_graph.addAverageLine();
+            }
 
             const interval = this.secondsPerTick * 1000;
             this.timeout_id = window.setTimeout(

@@ -50,8 +50,9 @@
             this.graph_obj.series[0].setData(this.get('_payoffs').concat([null]));
         },
         addAverageLine() {
-            if (!this.graph_obj)
+            if (!this.graph_obj) {
                 return;
+            }
 
             const realized_payoffs = this.get('_payoffs');
             const avg = realized_payoffs.reduce((a, b) => a + b, 0) / realized_payoffs.length; 
@@ -159,6 +160,7 @@
                         name: "Average Payoff",
                         type: "line",
                         data: [],
+                        zIndex: 10,
                     },
                     {
                         name: "Min Payoff",
