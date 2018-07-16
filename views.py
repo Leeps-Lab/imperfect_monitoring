@@ -64,10 +64,10 @@ def get_output_table_header():
         'p2_periodResult',
         'p1_avg_payoffs',
         'p2_avg_payoffs',
-        'subperiod_length_seconds',
+        'subperiod_length',
         'num_subperiods',
         'seconds_per_tick',
-        'rest_length',
+        'rest_length_seconds',
         'payoff_matrix(AGood, ABad, BGood, BBad)',
         'probability_matrix(AA, AB, BA, BB)'
     ]
