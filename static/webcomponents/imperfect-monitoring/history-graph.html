@@ -61,22 +61,25 @@
             realized_payoffs.unshift(null);
 
             realized_payoffs.forEach(payoff => {
-                this.graph_obj.series[0].addPoint(payoff);
+                this.graph_obj.series[0].addPoint(payoff, false);
             });
 
             // keep track of total num of payoffs here because highcharts doesn't let you do that apparently
             this._totalNumPoints += num_payoffs + 1;
 
-            this.graph_obj.series[1].addPoint([this._totalNumPoints - num_payoffs - 1, avg]);
-            this.graph_obj.series[1].addPoint([this._totalNumPoints, avg]);
+            this.graph_obj.series[1].addPoint([this._totalNumPoints - num_payoffs - 1, avg], false);
+            this.graph_obj.series[1].addPoint([this._totalNumPoints, avg], false);
+
+            // save xaxis extremes before we add plotline
+            // for some reason, getExtremes is returning nulls after adding the plotline, before redrawing
+            const extremes = this.graph_obj.xAxis[0].getExtremes();
 
             // add vertical subperiod separators
-            this.graph_obj.xAxis[0].options.plotLines.push({
+            this.graph_obj.xAxis[0].addPlotLine({
                 color: 'black',
                 width: 1,
                 value: this._totalNumPoints - num_payoffs - 1,
-            });
-            this.graph_obj.xAxis[0].update();
+            }, false);
 
             // add payoff bounds for this subperiod
 
@@ -90,7 +93,7 @@
                     [this._totalNumPoints - num_payoffs - 1, payoff_bounds.min],
                     [this._totalNumPoints, payoff_bounds.min]
                 ],
-            });
+            }, false);
             this.graph_obj.addSeries({
                 type: 'line',
                 color: payoff_bounds.color,
@@ -99,28 +102,30 @@
                     [this._totalNumPoints - num_payoffs - 1, payoff_bounds.max],
                     [this._totalNumPoints, payoff_bounds.max]
                 ],
-            });
+            }, false);
 
             // if we have enough subperiods to fill the entire screen, add a scrollbar
             if (this._totalNumPoints >= this.displayedSubperiods * (this.subperiodLength + 1) - 1) {
                 this.graph_obj.update({
                     chart: { height: 425 },
                     xAxis: { scrollbar: { enabled: true } },
-                });
+                }, false);
             }
 
             // if graph is scrolled all the way to the left,
             // automatically move the viewport over by one subperiod
-            const extremes = this.graph_obj.xAxis[0].getExtremes();
             if (extremes.max >= this._totalNumPoints - realized_payoffs.length) {
                 this.graph_obj.xAxis[0].setExtremes(
                     extremes.min + num_payoffs + 1,
-                    extremes.max + num_payoffs + 1
+                    extremes.max + num_payoffs + 1,
+                    false
                 );
             }
 
+            this.graph_obj.redraw();
+
             // enable animation after the first subperiod is added
-            this.graph_obj.update({ chart: { animation: true} });
+            this.graph_obj.update({ chart: { animation: true} }, false);
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);
