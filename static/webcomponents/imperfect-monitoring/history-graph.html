@@ -27,6 +27,9 @@
             bColor: {
                 type: String,
             },
+            enableAnimations: {
+                type: Boolean,
+            },
             _maxPayoff: {
                 type: Number,
                 computed: '_computeMaxPayoff(payoffMatrix)',
@@ -124,8 +127,10 @@
 
             this.graph_obj.redraw();
 
-            // enable animation after the first subperiod is added
-            this.graph_obj.update({ chart: { animation: true} }, false);
+            // if animations are enabled, turn them on after the first subperiod is added
+            if (this.enableAnimations) {
+                this.graph_obj.update({ chart: { animation: true} }, false);
+            }
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);

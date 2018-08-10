@@ -132,6 +132,7 @@
                 payoff-matrix="[[ _myPayoffs ]]"
                 displayed-subperiods="[[ displayedSubperiods ]]"
                 subperiod-length="[[ subperiodLength ]]"
+                enable-animations="[[ enableAnimations ]]"
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]">
             </history-graph>
@@ -248,6 +249,10 @@
                 value: false,
             },
             displayScore: {
+                type: Boolean,
+                value: false,
+            },
+            enableAnimations: {
                 type: Boolean,
                 value: false,
             },

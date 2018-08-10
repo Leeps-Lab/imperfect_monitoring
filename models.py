@@ -39,6 +39,7 @@ def parse_config(config_file):
             'display_average_ab_graph': True if row['display_average_ab_graph'] == 'TRUE' else False,
             'display_payoff_matrix': True if row['display_payoff_matrix'] == 'TRUE' else False,
             'display_score': True if row['display_score'] == 'TRUE' else False,
+            'enable_animations': True if row['enable_animations'] == 'TRUE' else False,
         })
     return rounds
 
@@ -86,6 +87,9 @@ class Group(DecisionGroup):
 
     def display_score(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['display_score']
+
+    def enable_animations(self):
+        return parse_config(self.session.config['config_file'])[self.round_number-1]['enable_animations']
 
     def num_signals(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['num_signals']
