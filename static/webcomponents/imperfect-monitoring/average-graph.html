@@ -15,14 +15,6 @@
             payoffMatrix: {
                 type: Array,
             },
-            aPayoffs: {
-                type: Array,
-                value: () => [],
-            },
-            bPayoffs: {
-                type: Array,
-                value: () => [],
-            },
             showA: {
                 type: Boolean,
                 value: false,
@@ -37,29 +29,32 @@
             bColor: {
                 type: String,
             },
+            _average: {
+                type: Number,
+                value: 0,
+            },
+            _numPayoffs: {
+                type: Number,
+                value: 0,
+            },
             _maxPayoff: {
                 type: Number,
                 computed: '_computeMaxPayoff(payoffMatrix)',
             },
         },
-        observers: [
-            '_calcAverage(aPayoffs.splices)',
-            '_calcAverage(bPayoffs.splices)',
-        ],
         ready() {
             this.async(this._initHighchart.bind(this), 1);
         },
-        _calcAverage() {
-            if (!this.graph_obj)
+        addPayoff(payoff, decision) {
+            if ((decision == 1 && !this.showA) || (decision == 0 && !this.showB)) {
                 return;
+            }
 
-            const a_payoffs = this.get('aPayoffs').map(e => e.value);
-            const b_payoffs = this.get('bPayoffs').map(e => e.value);
-            const combined = a_payoffs.concat(b_payoffs);
+            let sum = this._average * this._numPayoffs;
+            this._numPayoffs++;
+            this._average = (sum + payoff) / this._numPayoffs;
 
-            const avg = combined.reduce((a, b) => a + b, 0) / combined.length;
-
-            this.graph_obj.series[0].setData([avg, avg]);
+            this.graph_obj.series[0].setData([this._average, this._average]);
         },
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);

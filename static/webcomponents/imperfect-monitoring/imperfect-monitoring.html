@@ -136,38 +136,40 @@
                 b-color="[[ bColor ]]">
             </history-graph>
         </div>
-        <div hidden$="[[ !displayAverageAGraph ]]">
+        <template is="dom-if" if="[[ displayAverageAGraph ]]">
+            <div>
             <span>Average A</span>
             <average-graph
                 payoff-matrix="[[ _myPayoffs ]]"
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]"
-                a-payoffs="[[ _aPayoffs ]]"
                 show-a>
             </average-graph>
         </div>
-        <div hidden$="[[ !displayAverageBGraph ]]">
+        </template>
+        <template is="dom-if" if="[[ displayAverageBGraph ]]">
+            <div>
             <span>Average B</span>
             <average-graph
                 payoff-matrix="[[ _myPayoffs ]]"
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]"
-                b-payoffs="[[ _bPayoffs ]]"
                 show-b>
             </average-graph>
         </div>
-        <div hidden$="[[ !displayAverageABGraph ]]">
+        </template>
+        <template is="dom-if" if="[[ displayAverageABGraph ]]">
+            <div>
             <span>Average AB</span>
             <average-graph
                 payoff-matrix="[[ _myPayoffs ]]"
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]"
-                a-payoffs="[[ _aPayoffs ]]"
-                b-payoffs="[[ _bPayoffs ]]"
                 show-a
                 show-b>
             </average-graph>
         </div>
+        </template>
     </div>
     
     <div id="buttons">
@@ -269,14 +271,6 @@
             _curSubperiodPayoffs: {
                 type: Array,
             },
-            _aPayoffs: {
-                type: Array,
-                value: () => [],
-            },
-            _bPayoffs: {
-                type: Array,
-                value: () => [],
-            },
             _isPeriodRunning: {
                 type: Boolean,
             },
@@ -310,10 +304,7 @@
 
             this.cur_subperiod_graph.addPayoff(payoffs[tick_num]);
 
-            if (this._fixedDecision == 0)
-                this.push('_bPayoffs', {value: payoffs[tick_num]});
-            else
-                this.push('_aPayoffs', {value: payoffs[tick_num]});
+            this._updateAverageGraphs(payoffs[tick_num], this._fixedDecision);
             
             this.totalPoints += payoffs[tick_num];
 
@@ -330,6 +321,13 @@
         },
         _setMyDecision(e) {
             this._myDecision = parseInt(e.target.value);
+        },
+        _updateAverageGraphs(payoff, decision) {
+            let graphs = Polymer.dom(this.root).querySelectorAll('average-graph');
+            
+            graphs.forEach(graph => {
+                graph.addPayoff(payoff, decision);
+            });
         },
         _computeMyPayoffs(payoffMatrix) {
             return payoffMatrix.map(e => parseInt(e[oTree.idInGroup - 1]));
