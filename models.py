@@ -6,6 +6,7 @@ from otree_redwood.models import DecisionGroup
 from otree_redwood.utils import DiscreteEventEmitter
 import csv, random, math
 from jsonfield import JSONField
+from django.db.models import IntegerField
 
 
 author = 'Your name here'
@@ -183,24 +184,14 @@ class Group(DecisionGroup):
     
 
 class Player(BasePlayer):
-    # store randomly generated initial decisions for each round
-    # ensures that calling initial_decision twice in the same round gives the same result
-    decisions_by_round = JSONField()
+    # stores randomly generated initial decision for this player so player.initial_decision
+    # always returns the same value
+    _initial_decision = IntegerField(null=True)
 
     def initial_decision(self):
         self.refresh_from_db()
-
-        if not self.decisions_by_round:
-            self.decisions_by_round = {}
-        
-        key = str(self.round_number)
-
-        if key in self.decisions_by_round:
-            return self.decisions_by_round[key]
-        
-        decision = random.choice([0, 1])
-        self.decisions_by_round[key] = decision
-        # self.save() doesn't save JSONFields, so this line manually saves decisions_by_round
-        # see otree_redwood.models.Group.save for more info
-        self.__class__._default_manager.filter(pk=self.pk).update(decisions_by_round=self.decisions_by_round)
-        return decision
+        if self._initial_decision:
+            return self._initial_decision
+        self._initial_decision = random.choice([0, 1])
+        self.save(update_fields=['_initial_decision'])
+        return self._initial_decision
