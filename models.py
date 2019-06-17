@@ -41,6 +41,7 @@ def parse_config(config_file):
             'display_payoff_matrix': True if row['display_payoff_matrix'] == 'TRUE' else False,
             'display_score': True if row['display_score'] == 'TRUE' else False,
             'enable_animations': True if row['enable_animations'] == 'TRUE' else False,
+            'use_single_button': True if row['use_single_button'] == 'TRUE' else False,
         })
     return rounds
 
@@ -91,6 +92,9 @@ class Group(DecisionGroup):
 
     def enable_animations(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['enable_animations']
+
+    def use_single_button(self):
+        return parse_config(self.session.config['config_file'])[self.round_number-1]['use_single_button']
 
     def num_signals(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['num_signals']
@@ -189,6 +193,10 @@ class Player(BasePlayer):
     _initial_decision = IntegerField(null=True)
 
     def initial_decision(self):
+        # if we're in single-button mode, we always want to start in A
+        if self.group.use_single_button():
+            return 1
+
         self.refresh_from_db()
         if self._initial_decision:
             return self._initial_decision

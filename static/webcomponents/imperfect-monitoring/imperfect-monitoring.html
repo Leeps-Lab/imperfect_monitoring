@@ -79,6 +79,10 @@
         button.border-b-selected {
             border: thick solid #fc9755;
         }
+
+        button.switch-button {
+            border: thick solid #fc9755;
+        }
     </style>
 
     <redwood-period
@@ -96,17 +100,17 @@
         <tr>
             <th></th>
             <th>If other player:</th>
-            <th style$="background-color: [[ aColor ]];">Contribute</th>
-            <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
+            <th style$="background-color: [[ aColor ]];">A</th>
+            <th style$="background-color: [[ bColor ]];">B</th>
         </tr>
         <tr>
             <th rowspan="2">If you:</th> 
-            <th style$="background-color: [[ aColor ]];">Contribute</th>
+            <th style$="background-color: [[ aColor ]];">A</th>
             <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 0) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
             <td><b>[[ _array(_myPayoffs, 0) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 1) ]], else <b>[[ _array(_myPayoffs, 1) ]]</b></td>
         </tr>
         <tr>
-            <th style$="background-color: [[ bColor ]];">Don't Contribute</th>
+            <th style$="background-color: [[ bColor ]];">B</th>
             <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 2) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
             <td><b>[[ _array(_myPayoffs, 2) ]]</b> with prob. [[ _arrayPercent(_myProbabilities, 3) ]], else <b>[[ _array(_myPayoffs, 3) ]]</b></td>
         </tr>
@@ -174,24 +178,35 @@
     </div>
     
     <div id="buttons">
-        <button
-            type="button"
-            value=0
-            on-tap="_setMyDecision"
-            class$="btn [[ _buttonBorder(0, _myDecision) ]]"
-            style$="background-color: [[ _buttonBackground(0, _fixedDecision) ]]"
-            disabled$="[[ !_isPeriodRunning ]]">
-            Don't Contribute
-        </button>
-        <button
-            type="button"
-            value=1
-            on-tap="_setMyDecision"
-            class$="btn [[ _buttonBorder(1, _myDecision) ]]"
-            style$="background-color: [[ _buttonBackground(1, _fixedDecision) ]]"
-            disabled$="[[ !_isPeriodRunning ]]">
-            Contribute
-        </button>
+        <template is="dom-if" if="[[ !useSingleButton ]]">
+            <button
+                type="button"
+                value=0
+                on-tap="_setMyDecision"
+                class$="btn [[ _buttonBorder(0, _myDecision) ]]"
+                style$="background-color: [[ _buttonBackground(0, _fixedDecision) ]]"
+                disabled$="[[ !_isPeriodRunning ]]">
+                A
+            </button>
+            <button
+                type="button"
+                value=1
+                on-tap="_setMyDecision"
+                class$="btn [[ _buttonBorder(1, _myDecision) ]]"
+                style$="background-color: [[ _buttonBackground(1, _fixedDecision) ]]"
+                disabled$="[[ !_isPeriodRunning ]]">
+                B
+            </button>
+        </template>
+        <template is="dom-if" if="[[ useSingleButton ]]">
+            <button
+                type="button"
+                on-tap="_switchDecision"
+                class="btn switch-button"
+                disabled$="[[ _switchButtonDisabled(_isPeriodRunning, _myDecision) ]]">
+                Switch to B
+            </button>
+        </template>
     </div>
 
 </template>
@@ -256,6 +271,10 @@
                 type: Boolean,
                 value: false,
             },
+            useSingleButton: {
+                type: Boolean,
+                value: false,
+            },
             _myDecision: {
                 type: Number,
             },
@@ -295,6 +314,10 @@
 
             this._fixedDecision = msg.fixed_decision;
             this.set('_curSubperiodPayoffs', msg.payoffs);
+
+            if (this.useSingleButton) {
+                this._myDecision = 1;
+            }
 
             window.clearTimeout(this.timeout_id);
             this.cur_subperiod_graph.clearGraph();
@@ -362,6 +385,12 @@
             if (value === 0)
                 return 'border-b-selected';
         },
+        _switchDecision() {
+            this._myDecision = 0;
+        },
+        _switchButtonDisabled(_isPeriodRunning, _myDecision) {
+            return !_isPeriodRunning || _myDecision === 0;
+        }
     });
 </script>
 
