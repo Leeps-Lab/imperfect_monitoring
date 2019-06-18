@@ -24,6 +24,9 @@
             bColor: {
                 type: String,
             },
+            expectedPayoffs: {
+                type: Array,  
+            },
             _payoffs: {
                 type: Array,
                 value: () => [],
@@ -32,9 +35,9 @@
                 type: Number,
                 computed: '_computeMaxPayoff(payoffMatrix)',
             },
-            _payoffBounds: {
+            _expectedPayoffLines: {
                 type: Array,
-                computed: '_computePayoffBounds(payoffMatrix)',
+                computed: '_computeexpectedPayoffLines(expectedPayoffs)',
             },
         },
         ready() {
@@ -61,12 +64,12 @@
             // use -999 and 999 so line stretches all the way across graph
             this.graph_obj.series[1].setData([[-999, avg], [999, avg]]);
         },
-        addPayoffBounds(decision) {
+        addexpectedPayoffLines(decision) {
             if (!this.graph_obj)
                 return;
 
-            // get color and min and max payoffs from _payoffBounds map
-            const payoff_bounds = this.get(['_payoffBounds', decision]);
+            // get color and min and max payoffs from _expectedPayoffLines map
+            const payoff_bounds = this.get(['_expectedPayoffLines', decision]);
 
             this.graph_obj.series[2].options.color = payoff_bounds.color;
             this.graph_obj.series[2].update(this.graph_obj.series[2].options);
@@ -86,19 +89,20 @@
         _computeMaxPayoff(payoffMatrix) {
             return Math.max.apply(null, payoffMatrix);
         },
-        // _payoffBounds is an array that maps decisions to an object
-        // that gives the line color and max/min payoffs for that decision
-        _computePayoffBounds(payoffMatrix) {
+        // _expectedPayoffLines is an array that maps decisions to an object
+        // that gives the line color and expected payoffs for that decision
+        _computeexpectedPayoffLines(expectedPayoffs) {
+            console.log(expectedPayoffs)
             return [
                 {
                     color: this.bColor,
-                    min: Math.min(payoffMatrix[2], payoffMatrix[3]),
-                    max: Math.max(payoffMatrix[2], payoffMatrix[3]),
+                    min: Math.min(expectedPayoffs[2], expectedPayoffs[3]),
+                    max: Math.max(expectedPayoffs[2], expectedPayoffs[3]),
                 },
                 {
                     color: this.aColor,
-                    min: Math.min(payoffMatrix[0], payoffMatrix[1]),
-                    max: Math.max(payoffMatrix[0], payoffMatrix[1]),
+                    min: Math.min(expectedPayoffs[0], expectedPayoffs[1]),
+                    max: Math.max(expectedPayoffs[0], expectedPayoffs[1]),
                 }
             ];
         },

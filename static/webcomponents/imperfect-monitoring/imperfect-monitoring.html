@@ -139,7 +139,8 @@
                 payoff-matrix="[[ _myPayoffs ]]"
                 subperiod-length="[[ subperiodLength ]]"
                 a-color="[[ aColor ]]"
-                b-color="[[ bColor ]]">
+                b-color="[[ bColor ]]"
+                expected-payoffs="[[ _expectedPayoffs ]]">
             </cur-subperiod-graph>
         </div>
         <div>
@@ -150,7 +151,8 @@
                 subperiod-length="[[ subperiodLength ]]"
                 enable-animations="[[ enableAnimations ]]"
                 a-color="[[ aColor ]]"
-                b-color="[[ bColor ]]">
+                b-color="[[ bColor ]]"
+                expected-payoffs="[[ _expectedPayoffs ]]">
             </history-graph>
         </div>
         <template is="dom-if" if="[[ displayAverageAGraph ]]">
@@ -160,7 +162,8 @@
                 payoff-matrix="[[ _myPayoffs ]]"
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]"
-                show-a>
+                show-a
+                expected-payoffs="[[ _expectedPayoffs ]]">
             </average-graph>
         </div>
         </template>
@@ -171,7 +174,8 @@
                 payoff-matrix="[[ _myPayoffs ]]"
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]"
-                show-b>
+                show-b
+                expected-payoffs="[[ _expectedPayoffs ]]">
             </average-graph>
         </div>
         </template>
@@ -183,7 +187,8 @@
                 a-color="[[ aColor ]]"
                 b-color="[[ bColor ]]"
                 show-a
-                show-b>
+                show-b
+                expected-payoffs="[[ _expectedPayoffs ]]">
             </average-graph>
         </div>
         </template>
@@ -307,6 +312,10 @@
                 type: Array,
                 computed: '_computeMyProbabilities(probabilityMatrix)',
             },
+            _expectedPayoffs: {
+                type: Array,
+                computed: '_computeExpectedPayoffs(_myPayoffs, _myProbabilities)',
+            },
             _curSubperiodPayoffs: {
                 type: Array,
             },
@@ -336,7 +345,7 @@
 
             window.clearTimeout(this.timeout_id);
             this.cur_subperiod_graph.clearGraph();
-            this.cur_subperiod_graph.addPayoffBounds(this._fixedDecision);
+            this.cur_subperiod_graph.addexpectedPayoffLines(this._fixedDecision);
             this.start_time = performance.now();
             this._tick(0);
         },
@@ -408,6 +417,14 @@
         },
         _hideCoordinationIndicator(coordinationIndicator) {
             return coordinationIndicator < 0;
+        },
+        _computeExpectedPayoffs(payoffs, probs) {
+            return [
+                probs[0] * payoffs[1] + (1-probs[0]) * payoffs[0],
+                probs[1] * payoffs[1] + (1-probs[1]) * payoffs[0],
+                probs[2] * payoffs[3] + (1-probs[2]) * payoffs[2],
+                probs[3] * payoffs[3] + (1-probs[3]) * payoffs[2],
+            ];
         },
     });
 </script>
