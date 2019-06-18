@@ -48,7 +48,7 @@ def get_config_columns(group):
 
     return [num_subperiods, seconds_per_tick, rest_length, payoff_matrix, probability_matrix]
 
-def get_output_table_header():
+def get_output_table_header(groups):
     return [
         'timestamp_of_start',
         'session_ID',

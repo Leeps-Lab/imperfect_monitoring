@@ -7,6 +7,7 @@ from otree_redwood.utils import DiscreteEventEmitter
 import csv, random, math
 from jsonfield import JSONField
 from django.db.models import IntegerField
+from django.core.exceptions import ImproperlyConfigured
 
 
 author = 'Your name here'
@@ -42,6 +43,7 @@ def parse_config(config_file):
             'display_score': True if row['display_score'] == 'TRUE' else False,
             'enable_animations': True if row['enable_animations'] == 'TRUE' else False,
             'use_single_button': True if row['use_single_button'] == 'TRUE' else False,
+            'public_monitoring': True if row['public_monitoring'] == 'TRUE' else False,
         })
     return rounds
 
@@ -96,6 +98,9 @@ class Group(DecisionGroup):
     def use_single_button(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['use_single_button']
 
+    def public_monitoring(self):
+        return parse_config(self.session.config['config_file'])[self.round_number-1]['public_monitoring']
+
     def num_signals(self):
         return parse_config(self.session.config['config_file'])[self.round_number-1]['num_signals']
     
@@ -104,7 +109,6 @@ class Group(DecisionGroup):
         seconds_per_tick = self.seconds_per_tick()
         num_signals = self.num_signals()
         subperiod_length = self.subperiod_length()
-
         num_subperiods = math.ceil(num_signals / subperiod_length)
 
         return (num_signals * seconds_per_tick) + (num_subperiods * rest_length_seconds)
@@ -126,49 +130,67 @@ class Group(DecisionGroup):
 
     def subperiod_start(self, current_interval, intervals):
         self.refresh_from_db()
-        msg = {}
         num_signals = min(self.num_signals() - current_interval * self.subperiod_length(), self.subperiod_length())
+        msg = {}
+
+        # if we're doing public monitoring, just calculate one set of signals
+        # just use the first player's decision since public monitoring requires that probs are symmetric
+        if self.public_monitoring():
+            signals = self.calc_signals(num_signals, self.get_players()[0]);
 
         for player in self.get_players():
             pcode = player.participant.code
+            if not self.public_monitoring():
+                signals = self.calc_signals(num_signals, player)
 
             msg[pcode] = {
                 'fixed_decision': self.group_decisions[pcode],
-                'payoffs': self.calc_payoffs(player, num_signals, current_interval),
+                'payoffs': self.calc_payoffs(player, current_interval, signals),
             }
         
         self.send('subperiod-start', msg)
     
-    def calc_payoffs(self, player, num_signals, subperiod_num):
-        payoff_matrix = parse_config(self.session.config['config_file'])[self.round_number-1]['payoff_matrix']
-        probability_matrix = parse_config(self.session.config['config_file'])[self.round_number-1]['probability_matrix']
+    def calc_signals(self, num_signals, player):
 
         pcode = player.participant.code
         my_decision = self.group_decisions[pcode]
         other_decision = [self.group_decisions[c] for c in self.group_decisions if c != pcode][0]
-
-        payoffs = [e[player.id_in_group - 1] for e in payoff_matrix]
+        probability_matrix = parse_config(self.session.config['config_file'])[self.round_number-1]['probability_matrix']
         probabilities = [e[player.id_in_group - 1] for e in probability_matrix]
 
         prob = ((my_decision * other_decision * probabilities[0]) +
                     (my_decision * (1 - other_decision) * probabilities[1]) +
                     ((1 - my_decision) * other_decision * probabilities[2]) +
                     ((1 - my_decision) * (1 - other_decision) * probabilities[3]))
-        
-        realized_payoffs = []
+
+        signals = []
         for i in range(num_signals):
             if random.random() <= prob:
-                if my_decision == 1:
-                    realized_payoffs.append(payoffs[1])
-                else:
-                    realized_payoffs.append(payoffs[3])
-                self.add_subperiod_result(pcode, 'B', subperiod_num)
+                signals.append('B')
             else:
-                if my_decision == 1:
+                signals.append('G')
+        
+        return signals
+
+    
+    def calc_payoffs(self, player, subperiod_num, signals):
+        payoff_matrix = parse_config(self.session.config['config_file'])[self.round_number-1]['payoff_matrix']
+        pcode = player.participant.code
+        payoffs = [e[player.id_in_group - 1] for e in payoff_matrix]
+        my_decision = self.group_decisions[pcode]
+        
+        realized_payoffs = []
+        for signal in signals:
+            if signal == 'B' and my_decision == 1:
+                    realized_payoffs.append(payoffs[1])
+            if signal == 'B' and my_decision == 0:
+                    realized_payoffs.append(payoffs[3])
+            if signal == 'G' and my_decision == 1:
                     realized_payoffs.append(payoffs[0])
-                else:
+            if signal == 'G' and my_decision == 0:
                     realized_payoffs.append(payoffs[2])
-                self.add_subperiod_result(pcode, 'G', subperiod_num)
+
+            self.add_subperiod_result(pcode, signal, subperiod_num)
         
         player.payoff += sum(realized_payoffs)
         player.save()
