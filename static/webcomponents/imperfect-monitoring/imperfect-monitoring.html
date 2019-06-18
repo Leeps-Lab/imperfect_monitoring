@@ -38,7 +38,13 @@
         }
 
         #score {
+            margin: 0 15px 15px 0;
+            display: inline-block;
+        }
+
+        #coordination-indicator {
             margin-bottom: 15px;
+            display: inline-block;
         }
 
         #graphs {
@@ -116,9 +122,15 @@
         </tr>
     </table>
 
-    <div id="score" hidden$="[[ !displayScore ]]">
-        Points so far: [[ totalPoints ]]
+    <div>
+        <div id="score" hidden$="[[ !displayScore ]]">
+            <b>Points so far:</b> [[ totalPoints ]]
+        </div>
+        <div id="coordination-indicator" hidden$="[[ _hideCoordinationIndicator(coordinationIndicator) ]]">
+            <b>Coordination Indicator:</b> [[ coordinationIndicator ]]
+        </div>
     </div>
+
 
     <div id="graphs">
         <div >
@@ -245,6 +257,9 @@
                 type: Number,
             },
             totalPoints: {
+                type: Number,
+            },
+            coordinationIndicator: {
                 type: Number,
             },
             displayAverageAGraph: {
@@ -390,7 +405,10 @@
         },
         _switchButtonDisabled(_isPeriodRunning, _myDecision) {
             return !_isPeriodRunning || _myDecision === 0;
-        }
+        },
+        _hideCoordinationIndicator(coordinationIndicator) {
+            return coordinationIndicator < 0;
+        },
     });
 </script>
 

@@ -44,6 +44,7 @@ def parse_config(config_file):
             'enable_animations': True if row['enable_animations'] == 'TRUE' else False,
             'use_single_button': True if row['use_single_button'] == 'TRUE' else False,
             'public_monitoring': True if row['public_monitoring'] == 'TRUE' else False,
+            'display_coordination_indicator': True if row['display_coordination_indicator'] == 'TRUE' else False,
         })
     return rounds
 
@@ -61,6 +62,20 @@ class Subsession(BaseSubsession):
 
 class Group(DecisionGroup):
     subperiod_results = JSONField()
+
+    # "coordination indicator" is random number shown on everyone's screen to encourage coordination
+    # save random number to database so that everyone gets the same number
+    _coordination_indicator = IntegerField(null=True)
+    def coordination_indicator(self):
+        display_coordination_indicator = parse_config(self.session.config['config_file'])[self.round_number-1]['display_coordination_indicator']
+        if not display_coordination_indicator:
+            return -1
+
+        if self._coordination_indicator:
+            return self._coordination_indicator
+        self._coordination_indicator = random.randint(0, 100)
+        self.save(update_fields=['_coordination_indicator'])
+        return self._coordination_indicator
 
     def num_rounds(self):
         return len(parse_config(self.session.config['config_file']))

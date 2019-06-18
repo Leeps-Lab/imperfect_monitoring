@@ -1,5 +1,5 @@
-displayed_subperiods,subperiod_length,rest_length_seconds,seconds_per_tick,num_signals,pi1(AGood),pi2(AGood),pi1(ABad),pi2(ABad),pi1(BGood),pi2(BGood),pi1(BBad),pi2(BBad),p1(AA),p2(AA),p1(AB),p2(AB),p1(BA),p2(BA),p1(BB),p2(BB),display_average_a_graph,display_average_b_graph,display_average_ab_graph,display_payoff_matrix,display_score,enable_animations,use_single_button,public_monitoring
-6,10,2,0.1,62,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.7,0.6,0.6,0.8,0.8,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE
-6,6,2,0.25,75,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.6,0.6,0.6,0.8,0.8,FALSE,FALSE,TRUE,TRUE,TRUE,FALSE,TRUE,FALSE
-6,6,2,0.25,80,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.6,0.6,0.6,0.8,0.8,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE
-6,4,2,0.5,40,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.6,0.6,0.6,0.8,0.8,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE
+displayed_subperiods,subperiod_length,rest_length_seconds,seconds_per_tick,num_signals,pi1(AGood),pi2(AGood),pi1(ABad),pi2(ABad),pi1(BGood),pi2(BGood),pi1(BBad),pi2(BBad),p1(AA),p2(AA),p1(AB),p2(AB),p1(BA),p2(BA),p1(BB),p2(BB),display_average_a_graph,display_average_b_graph,display_average_ab_graph,display_payoff_matrix,display_score,enable_animations,use_single_button,public_monitoring,display_coordination_indicator
+6,10,2,0.1,62,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.7,0.6,0.6,0.8,0.8,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE
+6,6,2,0.25,75,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.6,0.6,0.6,0.8,0.8,FALSE,FALSE,TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE
+6,6,2,0.25,80,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.6,0.6,0.6,0.8,0.8,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
+6,4,2,0.5,40,100,100,0,0,125,125,25,25,0.4,0.4,0.6,0.6,0.6,0.6,0.8,0.8,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE
