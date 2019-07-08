@@ -126,8 +126,8 @@
         <div id="score" hidden$="[[ !displayScore ]]">
             <b>Points so far:</b> [[ totalPoints ]]
         </div>
-        <div id="coordination-indicator" hidden$="[[ _hideCoordinationIndicator(coordinationIndicator) ]]">
-            <b>Coordination Indicator:</b> [[ coordinationIndicator ]]
+        <div id="coordination-indicator" hidden$="[[ _hideCoordinationIndicator(_coordinationIndicator) ]]">
+            <b>Coordination Indicator:</b> [[ _coordinationIndicator ]]
         </div>
     </div>
 
@@ -264,9 +264,6 @@
             totalPoints: {
                 type: Number,
             },
-            coordinationIndicator: {
-                type: Number,
-            },
             displayAverageAGraph: {
                 type: Boolean,
                 value: false,
@@ -322,6 +319,9 @@
             _isPeriodRunning: {
                 type: Boolean,
             },
+            _coordinationIndicator: {
+                type: Number,
+            },
         },
         ready() {
             this._myDecision = this.initialDecision;
@@ -339,9 +339,7 @@
             this._fixedDecision = msg.fixed_decision;
             this.set('_curSubperiodPayoffs', msg.payoffs);
 
-            if (this.useSingleButton) {
-                this._myDecision = 1;
-            }
+            this._coordinationIndicator = msg.coordination_indicator;
 
             window.clearTimeout(this.timeout_id);
             this.cur_subperiod_graph.clearGraph();

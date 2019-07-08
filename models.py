@@ -7,14 +7,6 @@ from otree_redwood.utils import DiscreteEventEmitter
 import csv, random, math
 from jsonfield import JSONField
 from django.db.models import IntegerField
-from django.core.exceptions import ImproperlyConfigured
-
-
-author = 'Your name here'
-
-doc = """
-Your app description
-"""
 
 def parse_config(config_file):
     with open('imperfect_monitoring/configs/' + config_file) as f:
@@ -56,26 +48,14 @@ class Constants(BaseConstants):
 
 
 class Subsession(BaseSubsession):
+
     def before_session_starts(self):
             self.group_randomly()
 
 
 class Group(DecisionGroup):
+
     subperiod_results = JSONField()
-
-    # "coordination indicator" is random number shown on everyone's screen to encourage coordination
-    # save random number to database so that everyone gets the same number
-    _coordination_indicator = IntegerField(null=True)
-    def coordination_indicator(self):
-        display_coordination_indicator = parse_config(self.session.config['config_file'])[self.round_number-1]['display_coordination_indicator']
-        if not display_coordination_indicator:
-            return -1
-
-        if self._coordination_indicator:
-            return self._coordination_indicator
-        self._coordination_indicator = random.randint(0, 100)
-        self.save(update_fields=['_coordination_indicator'])
-        return self._coordination_indicator
 
     def num_rounds(self):
         return len(parse_config(self.session.config['config_file']))
@@ -152,6 +132,9 @@ class Group(DecisionGroup):
         # just use the first player's decision since public monitoring requires that probs are symmetric
         if self.public_monitoring():
             signals = self.calc_signals(num_signals, self.get_players()[0]);
+        
+        # "coordination indicator" is random number shown on everyone's screen to encourage coordination
+        coord_indicator = random.randint(0, 100)
 
         for player in self.get_players():
             pcode = player.participant.code
@@ -161,6 +144,7 @@ class Group(DecisionGroup):
             msg[pcode] = {
                 'fixed_decision': self.group_decisions[pcode],
                 'payoffs': self.calc_payoffs(player, current_interval, signals),
+                'coordination_indicator': coord_indicator,
             }
         
         self.send('subperiod-start', msg)
@@ -186,7 +170,6 @@ class Group(DecisionGroup):
                 signals.append('G')
         
         return signals
-
     
     def calc_payoffs(self, player, subperiod_num, signals):
         payoff_matrix = parse_config(self.session.config['config_file'])[self.round_number-1]['payoff_matrix']

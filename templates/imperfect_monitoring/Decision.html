@@ -21,7 +21,6 @@
         num-sub='{{ player.group.number_subperiods }}'
         total-points='{{ player.participant.payoff | floatformat:0 }}'
         seconds-per-tick='{{ player.group.seconds_per_tick }}'
-        coordination-indicator='{{ player.group.coordination_indicator }}'
         {% if player.group.display_average_a_graph %}
             display-average-a-graph
         {% endif %}
